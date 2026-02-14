@@ -2,7 +2,7 @@
  * src/lib/ai/geminiClient.ts
  *
  * Thin wrapper around the Gemini REST API.
- * Uses gemini-2.0-flash for all requests.
+ * Uses gemini-1.5-flash for all requests.
  */
 
 const BASE_URL =
