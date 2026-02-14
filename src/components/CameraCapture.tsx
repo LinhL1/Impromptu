@@ -16,7 +16,11 @@ export default function CameraCapture({ onCapture }: CameraCaptureProps) {
   const [cameraError, setCameraError] = useState(false);
   const nativeInputRef = useRef<HTMLInputElement>(null);
 
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  //const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const hasCameraSupport =
+  typeof navigator !== "undefined" &&
+  !!navigator.mediaDevices &&
+  !!navigator.mediaDevices.getUserMedia;
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -27,26 +31,50 @@ export default function CameraCapture({ onCapture }: CameraCaptureProps) {
   }, []);
 
   const startCamera = useCallback(async (facing: "user" | "environment") => {
-    setCameraError(false);
+  setCameraError(false);
+
+  try {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+    }
+
+    let stream: MediaStream;
+
     try {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((t) => t.stop());
-      }
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: facing, width: { ideal: 1080 }, height: { ideal: 1080 } },
+      // Preferred constraints
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: facing },
+          width: { ideal: 1080 },
+          height: { ideal: 1080 },
+        },
         audio: false,
       });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-      setCameraOpen(true);
     } catch {
-      setCameraError(true);
-      setCameraOpen(false);
+      // Fallback for emulators / weird devices
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: false,
+      });
     }
-  }, []);
+
+    streamRef.current = stream;
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+      await videoRef.current.play();
+    }
+
+    setCameraOpen(true);
+  } catch (err) {
+    console.error("Camera error:", err);
+    setCameraError(true);
+    setCameraOpen(false);
+
+    // Final fallback → native camera input
+    nativeInputRef.current?.click();
+  }
+}, []);
 
   useEffect(() => {
     return () => {
@@ -56,14 +84,14 @@ export default function CameraCapture({ onCapture }: CameraCaptureProps) {
     };
   }, []);
 
-  const handleCameraClick = useCallback(() => {
-    if (isMobile) {
-      // On mobile, use native file input with capture
-      nativeInputRef.current?.click();
-    } else {
-      startCamera(facingMode);
-    }
-  }, [isMobile, startCamera, facingMode]);
+  const handleCameraClick = useCallback(async () => {
+  if (hasCameraSupport) {
+    await startCamera(facingMode);
+  } else {
+    // Fallback for older browsers / weird emulators
+    nativeInputRef.current?.click();
+  }
+}, [hasCameraSupport, startCamera, facingMode]);
 
   const takePhoto = useCallback(() => {
     const video = videoRef.current;

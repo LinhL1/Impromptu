@@ -93,7 +93,6 @@ export default function Profile() {
                 <span className="flex-1 text-sm font-medium text-foreground">
                   {friend.name}
                 </span>
-                <Sparkles className="h-4 w-4 text-primary" />
               </div>
             ))}
           </div>
