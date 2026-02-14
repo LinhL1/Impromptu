@@ -2,7 +2,7 @@
  * src/lib/ai/analyzePhoto.ts
  */
 
-import { callGemini, fileToBase64 } from "./GeminiClient";
+import { callGemini, fileToBase64 } from "./geminiClient";
 
 export interface PhotoAnalysisResult {
   matches: boolean;

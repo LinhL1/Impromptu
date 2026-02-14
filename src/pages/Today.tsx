@@ -3,7 +3,16 @@ import { motion } from "framer-motion";
 import { Camera } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { generatePrompt } from "@/lib/ai/generatePrompt";
+import { speakText } from "@/lib/ai/speakText";
 import PromptCard from "@/components/PromptCard";
+
+function isScreenReaderOn(): boolean {
+  try {
+    return JSON.parse(localStorage.getItem("sh_screenReader") ?? "false");
+  } catch {
+    return false;
+  }
+}
 
 export default function Today() {
   const [prompt, setPrompt] = useState("");
@@ -14,6 +23,11 @@ export default function Today() {
     generatePrompt().then((p) => {
       setPrompt(p);
       setLoading(false);
+
+      // Speak the prompt aloud if screen reader is enabled
+      if (isScreenReaderOn() && p) {
+        speakText(`Today's photo prompt is: ${p}. Tap the camera button to capture your moment.`);
+      }
     });
   }, []);
 
@@ -47,9 +61,9 @@ export default function Today() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="text-xs italic text-muted-foreground"
+          className="text-xs text-muted-foreground"
         >
-          What did you find today?
+          Tap to capture your moment
         </motion.p>
       </div>
     </main>
