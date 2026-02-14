@@ -5,8 +5,8 @@ import { Sun, Users, Camera, User, Settings } from "lucide-react";
 const tabs = [
   { path: "/", label: "Today", icon: Sun },
   { path: "/friends", label: "Feed", icon: Users },
-  { path: "/settings", label: "Settings", icon: Settings },
   { path: "/profile", label: "Profile", icon: User },
+  { path: "/settings", label: "Settings", icon: Settings },
 ];
 
 export default function BottomNav() {
