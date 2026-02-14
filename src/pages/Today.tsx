@@ -2,25 +2,30 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { generatePrompt } from "@/lib/ai/generatePrompt";
+import { speakText } from "@/lib/ai/speakText";
+import PromptCard from "@/components/PromptCard";
+
+function isScreenReaderOn(): boolean {
+  try {
+    return JSON.parse(localStorage.getItem("sh_screenReader") ?? "false");
+  } catch {
+    return false;
+  }
+}
 
 export default function Today() {
   const navigate = useNavigate();
-  const [userName] = useState("Esha");
-  const today = new Date();
-  const currentDate = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
-  
-  const handleTodayClick = () => {
-    navigate('/camera');
-  };
-  
-  // Generate past dates for the map (going back 30 days)
-  const dates = [];
-  for (let i = 0; i < 30; i++) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    dates.push({
-      date: `${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`,
-      isToday: i === 0
+
+  useEffect(() => {
+    generatePrompt().then((p) => {
+      setPrompt(p);
+      setLoading(false);
+
+      // Speak the prompt aloud if screen reader is enabled
+      if (isScreenReaderOn() && p) {
+        speakText(`Today's photo prompt is: ${p}. Tap the camera button to capture your moment.`);
+      }
     });
   }
 

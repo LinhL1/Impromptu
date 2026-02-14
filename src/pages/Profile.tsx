@@ -6,7 +6,7 @@ import ProfilePhotoEditor from "@/components/ProfilePhotoEditor";
 import SettingsDrawer, { type Preferences } from "@/components/SettingsDrawer";
 
 export default function Profile() {
-  const [settingsOpen, setSettingsOpen] = useState(false);
+ // const [settingsOpen, setSettingsOpen] = useState(false);
   const [avatar, setAvatar] = useState(currentUser.avatar);
   const [preferences, setPreferences] = useState<Preferences>({
     darkMode: false,
@@ -24,13 +24,13 @@ export default function Profile() {
           className="flex items-center justify-between mb-8"
         >
           <h1 className="text-2xl font-bold text-foreground">Profile</h1>
-          <button
+          {/* <button
             onClick={() => setSettingsOpen(true)}
             className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring outline-none"
             aria-label="Settings"
           >
             <Settings className="h-5 w-5" />
-          </button>
+          </button> */}
         </motion.div>
 
         {/* User card */}
@@ -99,12 +99,12 @@ export default function Profile() {
         </motion.div>
       </div>
 
-      <SettingsDrawer
+      {/* <SettingsDrawer
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
         preferences={preferences}
         onPreferencesChange={setPreferences}
-      />
+      /> */}
     </main>
   );
 }

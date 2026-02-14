@@ -8,7 +8,7 @@
  * for screen readers, even if the user didn't write a caption.
  */
 
-import { callGemini, fileToBase64 } from "./GeminiClient";
+import { callGemini, fileToBase64 } from "./geminiClient";
 
 const FALLBACK_ALT = "User submitted photo for today's prompt.";
 
