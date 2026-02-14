@@ -1,45 +1,120 @@
-import { useState, useEffect, useCallback } from "react";
-import { AnimatePresence } from "framer-motion";
+/**
+ * src/pages/CameraPage.tsx
+ */
+
+import { useState, useEffect, useCallback, useRef } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { generatePrompt } from "@/lib/ai/generatePrompt";
 import { analyzePhoto } from "@/lib/ai/analyzePhoto";
+import { summarizeImage } from "@/lib/ai/summarizeImage";
+import { currentUser, addUserSubmission } from "@/lib/mock-data";
 import CameraCapture from "@/components/CameraCapture";
 import PhotoPreview from "@/components/PhotoPreview";
 import SubmissionSuccess from "@/components/SubmissionSuccess";
+import SubmissionRejected from "@/components/SubmissionRejected";
 
-type CameraState = "capture" | "preview" | "success";
+type CameraState = "capture" | "preview" | "analyzing" | "success" | "rejected";
+
+const ANALYZING_MESSAGES = [
+  "Analyzing your photo...",
+  "Checking the prompt...",
+  "Reviewing composition...",
+  "Almost there...",
+];
 
 export default function CameraPage() {
   const [state, setState] = useState<CameraState>("capture");
   const [prompt, setPrompt] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
   const [feedback, setFeedback] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [altText, setAltText] = useState("");
+  const [analyzingMessage, setAnalyzingMessage] = useState(ANALYZING_MESSAGES[0]);
+
+  const imageFileRef = useRef<File | null>(null);
+  const analyzingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     generatePrompt().then(setPrompt);
   }, []);
 
+  // Cycle through analyzing messages while waiting
+  useEffect(() => {
+    if (state === "analyzing") {
+      let i = 0;
+      analyzingIntervalRef.current = setInterval(() => {
+        i = (i + 1) % ANALYZING_MESSAGES.length;
+        setAnalyzingMessage(ANALYZING_MESSAGES[i]);
+      }, 1200);
+    } else {
+      if (analyzingIntervalRef.current) {
+        clearInterval(analyzingIntervalRef.current);
+      }
+    }
+    return () => {
+      if (analyzingIntervalRef.current) {
+        clearInterval(analyzingIntervalRef.current);
+      }
+    };
+  }, [state]);
+
   const handleCapture = useCallback((file: File) => {
-    const url = URL.createObjectURL(file);
-    setPhotoUrl(url);
+    imageFileRef.current = file;
+    setPhotoUrl(URL.createObjectURL(file));
     setState("preview");
   }, []);
 
   const handleSubmit = useCallback(
     async (caption: string) => {
-      setSubmitting(true);
+      setState("analyzing");
+      setAnalyzingMessage(ANALYZING_MESSAGES[0]);
+
       try {
-        const result = await analyzePhoto(prompt, "");
-        setFeedback(result);
+        const imageFile = imageFileRef.current ?? undefined;
+
+        const [analysis, generatedAlt] = await Promise.all([
+          analyzePhoto(prompt, "", imageFile),
+          imageFile
+            ? summarizeImage(imageFile, prompt)
+            : Promise.resolve(`Your photo for the prompt: ${prompt}`),
+        ]);
+
+        setFeedback(analysis.feedback);
+        setAltText(generatedAlt);
+
+        if (analysis.matches) {
+          addUserSubmission({
+            id: `user-sub-${Date.now()}`,
+            userId: currentUser.id,
+            prompt,
+            photoUrl,
+            caption: caption.trim() || undefined,
+            aiFeedback: analysis.feedback,
+            altText: generatedAlt,
+            createdAt: new Date(),
+          });
+          setState("success");
+        } else {
+          setState("rejected");
+        }
+      } catch (err) {
+        console.error("Submission error:", err);
+        // On unexpected error fall back to success so user isn't stuck
         setState("success");
-      } finally {
-        setSubmitting(false);
       }
     },
-    [prompt]
+    [prompt, photoUrl]
   );
 
+  const handleRetry = useCallback(() => {
+    imageFileRef.current = null;
+    setPhotoUrl("");
+    setFeedback("");
+    setAltText("");
+    setState("capture");
+  }, []);
+
   const handleBack = useCallback(() => {
+    imageFileRef.current = null;
     setPhotoUrl("");
     setState("capture");
   }, []);
@@ -49,7 +124,8 @@ export default function CameraPage() {
       <div className="w-full max-w-sm">
         {prompt && state === "capture" && (
           <p className="mb-6 text-center text-sm text-muted-foreground">
-            Today's prompt: <span className="font-bold text-foreground">{prompt}</span>
+            Today's prompt:{" "}
+            <span className="font-bold text-foreground">{prompt}</span>
           </p>
         )}
 
@@ -57,6 +133,7 @@ export default function CameraPage() {
           {state === "capture" && (
             <CameraCapture key="capture" onCapture={handleCapture} />
           )}
+
           {state === "preview" && (
             <PhotoPreview
               key="preview"
@@ -64,11 +141,73 @@ export default function CameraPage() {
               prompt={prompt}
               onSubmit={handleSubmit}
               onBack={handleBack}
-              submitting={submitting}
+              submitting={false}
             />
           )}
+
+          {state === "analyzing" && (
+            <motion.div
+              key="analyzing"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="flex flex-col items-center gap-8"
+            >
+              {/* Blurred photo behind the analysis UI */}
+              <div className="relative w-full overflow-hidden rounded-2xl shadow-elevated">
+                <img
+                  src={photoUrl}
+                  alt="Your photo being analyzed"
+                  className="aspect-square w-full object-cover blur-sm scale-105 brightness-75"
+                />
+                {/* Overlay content */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 px-6">
+                  {/* Spinner */}
+                  <div className="relative flex h-16 w-16 items-center justify-center">
+                    <div className="absolute h-16 w-16 animate-spin rounded-full border-4 border-primary-foreground/30 border-t-primary-foreground" />
+                    <div className="h-8 w-8 rounded-full gradient-warm shadow-soft" />
+                  </div>
+
+                  {/* Cycling message */}
+                  <AnimatePresence mode="wait">
+                    <motion.p
+                      key={analyzingMessage}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.3 }}
+                      className="text-center text-base font-semibold text-primary-foreground"
+                    >
+                      {analyzingMessage}
+                    </motion.p>
+                  </AnimatePresence>
+
+                  <p className="text-center text-xs text-primary-foreground/70">
+                    Checking against{" "}
+                    <span className="font-semibold">"{prompt}"</span>
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {state === "success" && (
-            <SubmissionSuccess key="success" feedback={feedback} photoUrl={photoUrl} />
+            <SubmissionSuccess
+              key="success"
+              feedback={feedback}
+              photoUrl={photoUrl}
+              altText={altText}
+            />
+          )}
+
+          {state === "rejected" && (
+            <SubmissionRejected
+              key="rejected"
+              feedback={feedback}
+              photoUrl={photoUrl}
+              prompt={prompt}
+              onRetry={handleRetry}
+            />
           )}
         </AnimatePresence>
       </div>

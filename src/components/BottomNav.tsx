@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
 import { NavLink, useLocation } from "react-router-dom";
-import { Sun, Users, Camera, User } from "lucide-react";
+import { Sun, Users, Camera, User, Settings } from "lucide-react";
 
 const tabs = [
   { path: "/", label: "Today", icon: Sun },
-  { path: "/friends", label: "Friends", icon: Users },
-  { path: "/camera", label: "Camera", icon: Camera },
+  { path: "/friends", label: "Feed", icon: Users },
+  { path: "/settings", label: "Settings", icon: Settings },
   { path: "/profile", label: "Profile", icon: User },
 ];
 

@@ -5,9 +5,14 @@ import { useNavigate } from "react-router-dom";
 interface SubmissionSuccessProps {
   feedback: string;
   photoUrl: string;
+  altText?: string; // AI-generated accessibility description
 }
 
-export default function SubmissionSuccess({ feedback, photoUrl }: SubmissionSuccessProps) {
+export default function SubmissionSuccess({
+  feedback,
+  photoUrl,
+  altText,
+}: SubmissionSuccessProps) {
   const navigate = useNavigate();
 
   return (
@@ -37,14 +42,18 @@ export default function SubmissionSuccess({ feedback, photoUrl }: SubmissionSucc
         <p className="text-sm text-muted-foreground">Your friends will love this</p>
       </motion.div>
 
-      {/* Photo thumbnail */}
+      {/* Photo thumbnail — uses AI-generated alt text if available */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.45 }}
         className="h-32 w-32 overflow-hidden rounded-2xl shadow-card"
       >
-        <img src={photoUrl} alt="Your shared photo" className="h-full w-full object-cover" />
+        <img
+          src={photoUrl}
+          alt={altText ?? "Your shared photo"}
+          className="h-full w-full object-cover"
+        />
       </motion.div>
 
       {/* AI feedback */}

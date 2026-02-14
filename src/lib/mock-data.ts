@@ -29,16 +29,16 @@ export const friends: User[] = [
 ];
 
 export const mockPrompts: string[] = [
-  "Golden hour",
-  "Something tiny",
   "Your view",
+  "Something tiny",
+  "Golden hour",
   "Favorite texture",
   "A heart shape in the wild",
   "Warm light",
   "Still life",
   "Morning sky",
   "A design fail",
-  "Stranger’s art",
+  "Stranger's art",
   "Soft shadow",
   "A buddy",
   "Best snack",
@@ -98,4 +98,22 @@ export const mockEncouragements = [
 export function getUserById(id: string): User | undefined {
   if (id === currentUser.id) return currentUser;
   return friends.find((f) => f.id === id);
+}
+
+// ─── User submission store ────────────────────────────────────────────────────
+// A simple in-memory array that acts as the user's own posts.
+// Consumers should call getFeedSubmissions() instead of reading
+// mockFeedSubmissions directly so they always get the merged + sorted list.
+
+export const userSubmissions: Submission[] = [];
+
+export function addUserSubmission(submission: Submission): void {
+  userSubmissions.unshift(submission);
+}
+
+/** Returns all submissions (user + friends) sorted newest-first. */
+export function getFeedSubmissions(): Submission[] {
+  return [...userSubmissions, ...mockFeedSubmissions].sort(
+    (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+  );
 }

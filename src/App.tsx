@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import Today from "./pages/Today";
 import Friends from "./pages/Friends";
+import Settings from "./pages/Settings";
 import CameraPage from "./pages/CameraPage";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
@@ -21,6 +22,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Today />} />
           <Route path="/friends" element={<Friends />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/camera" element={<CameraPage />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />

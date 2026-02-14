@@ -83,6 +83,12 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Dark mode gradient overrides */
+    --gradient-bg: linear-gradient(180deg, hsl(20 20% 8%), hsl(20 18% 10%));
+    --gradient-card: linear-gradient(135deg, hsl(20 18% 12%), hsl(20 15% 14%));
+    --shadow-card: 0 2px 16px -2px hsl(0 0% 0% / 0.25);
+    --shadow-elevated: 0 8px 32px -8px hsl(0 0% 0% / 0.4);
   }
 }
 
@@ -95,6 +101,11 @@
     @apply bg-background text-foreground font-body antialiased;
     background: var(--gradient-bg);
     min-height: 100vh;
+  }
+
+  /* Ensure background updates immediately when .dark is toggled */
+  html {
+    background: var(--gradient-bg);
   }
 
   h1, h2, h3, h4, h5, h6 {
