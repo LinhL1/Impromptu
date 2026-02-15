@@ -17,7 +17,6 @@ import {
   Type,
   Volume2,
   VolumeX,
-  Zap,
   ZapOff,
 } from "lucide-react";
 
@@ -287,9 +286,6 @@ export default function Settings() {
           className="mb-8 flex items-center justify-between"
         >
           <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full gradient-warm shadow-soft">
-            <Zap className="h-4 w-4 text-primary-foreground" />
-          </div>
         </motion.div>
 
         {/* ── Appearance ── */}
