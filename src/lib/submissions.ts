@@ -11,7 +11,6 @@ export interface SubmitPhotoParams {
   promptDate: string;
   photo: File;
   caption: string;
-  // Add these from your Gemini validation
   isValid: boolean;
   aiFeedback: string;
   altText: string;
@@ -36,7 +35,7 @@ export async function submitPhoto(params: SubmitPhotoParams) {
     // 2. Get download URL
     const photoUrl = await getDownloadURL(storageRef);
     
-    // 3. Create submission in Firestore with Gemini validation results
+    // 3. Save submission to Firestore
     const submissionRef = await addDoc(collection(db, 'submissions'), {
       userId,
       username,
@@ -52,14 +51,17 @@ export async function submitPhoto(params: SubmitPhotoParams) {
       aiFeedback,
       altText,
       submittedAt: serverTimestamp(),
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
     });
-    
+
+    // 4. Notify Profile page so stats update immediately without a refresh
+    window.dispatchEvent(new Event("sh:submission_added"));
+
     return {
       submissionId: submissionRef.id,
       isValid,
       feedback: aiFeedback,
-      altText
+      altText,
     };
   } catch (error) {
     console.error('Error submitting photo:', error);
@@ -74,12 +76,12 @@ export async function toggleLike(submissionId: string, userId: string, currently
   if (currentlyLiked) {
     await updateDoc(submissionRef, {
       likes: increment(-1),
-      likedBy: arrayRemove(userId)
+      likedBy: arrayRemove(userId),
     });
   } else {
     await updateDoc(submissionRef, {
       likes: increment(1),
-      likedBy: arrayUnion(userId)
+      likedBy: arrayUnion(userId),
     });
   }
 }
