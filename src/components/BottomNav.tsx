@@ -6,7 +6,7 @@ const tabs = [
   { path: "/", label: "Map", icon: Map  },
   { path: "/friends", label: "Feed", icon: Users },
   { path: "/profile", label: "Stats", icon: ChartBar },
-  { path: "/profile", label: "Profile", icon: Users },
+  //{ path: "/profile", label: "Profile", icon: Users },
   { path: "/settings", label: "Settings", icon: Settings },
 ];
 

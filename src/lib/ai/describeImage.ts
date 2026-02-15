@@ -5,7 +5,7 @@
  * When screen reader is enabled, the result is passed to speakText().
  */
 
-import { callGemini } from "./GeminiClient";
+import { callGemini } from "./geminiClient";
 
 const FALLBACK = "A photo shared in response to today's creative prompt.";
 
